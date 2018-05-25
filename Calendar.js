@@ -6,21 +6,22 @@
  *
  * Calendar that visually represents if an item has been ordered on a specific day by highlighting green or red
  *
- * @param (array) datasheet - Order information from provided excel sheet
- * @param (string) itemSelect - Category of interest to evaulate orders
- * @param (number) currMonth - Current month being viewed
- * @param (number) currYear - Current year being viewed
- * @param (number) simpYear - Last two digits of current year being viewed
- * @param (function) cal - Call Calendar function
- *
  */
 
+// Order information from provided csv data sheet
 var datasheet;
+//Category of interest to evaulate orders
 var itemSelect = "Meat";
+// Current month being viewed
 var currMonth;
+// Current year being viewed
 var currYear;
+// Last two digits of current year being viewed
 var simpYear;
+// Call Calendar function
 var cal;
+// Holds value of original HTML text of td after hover event is called
+var swap;
 
 $(document).ready(function(){
 
@@ -36,7 +37,7 @@ $(document).ready(function(){
                 cal.init();
         }
     });
-
+    // drop down selects which item orders calendar will be visually presenting
     $(".drop-down").on('change', function(){
         itemSelect = $(this).val();
         Papa.parse("./datasheet.csv", {
@@ -50,7 +51,7 @@ $(document).ready(function(){
             }
         })
     });
-
+    // refresh button pulls updated information from related csv
     $("#refresh").on("click",function(e){
         e.preventDefault();
         Papa.parse("./datasheet.csv", {
@@ -65,9 +66,10 @@ $(document).ready(function(){
         })
 
     });
+
 });
 
-
+// create calendar
 var CALENDAR = function () {
     var wrap, label,
         months = ["January", "February", "March", "April", "May", "June", "July","August", "September", "October", "November", "December"];
@@ -120,6 +122,8 @@ var CALENDAR = function () {
 
         calendar = createCal(year, month);
 
+        $("td.day").off();
+
         $("#cal-frame", wrap)
             .find(".curr")
             .removeClass("curr")
@@ -129,6 +133,16 @@ var CALENDAR = function () {
             .find(".temp")
             .fadeOut("fast", function () { $(this).remove(); });
         label.text(calendar.label);
+// on hover, show number of orders created instead of date
+        $("td.day").hover(function (e) {
+            swap = e.currentTarget.innerHTML;
+            e.currentTarget.innerHTML = e.currentTarget.getAttribute("data-amount");
+        },function (e) {
+            if(swap) {
+                e.currentTarget.innerHTML = swap;
+            }
+            swap = undefined;
+        })
     }
 
 
@@ -185,15 +199,15 @@ var CALENDAR = function () {
                     //do the sht
                     var currDay = calendar[i][j];
                     var ordersMade = match(currDay, currMonth, simpYear, itemSelect);
+                    var colorClass = ordersMade ? "false" : "true";
 
 
-                    if (ordersMade === true) {
-                        htmlCal += "<td class= ' " + ordersMade  + " '>" + calendar[i][j];
-
+                    if (ordersMade) {
+                        htmlCal += "<td class=\"day true\"" + " data-amount=  \"" + ordersMade + "\">" + calendar[i][j];
                     }
 
                     else{
-                        htmlCal += "<td class=' " + ordersMade + " '>" + calendar[i][j];
+                        htmlCal += "<td class=\"day false\" data-amount=\"0\">" + calendar[i][j];
                     }
                 }
                 else{
@@ -247,18 +261,25 @@ function match (day, month, year, select){
 
         if ((select === datasheet[j].Category) && (day === parseInt(orderDay)) && (month == parseInt(orderMonth)) && (year === parseInt(orderYear))){
             if (parseInt(datasheet[j].Quantity) > 0){
-                return true;
+                return parseInt(datasheet[j].Quantity);
              }
 
              else{
 
-                return false;
+                return 0;
             }
         }
     }
 }
 
-/*
- *Include function so that number of orders is shown on hover. Due by Tuesday
- */
+function orderNumber (day, month, year, select){
+    for (var j=0; j<datasheet.length; j++){
+        var orderMonth = datasheet[j].Date.split("/")[0];
+        var orderYear = datasheet[j].Date.split("/")[2];
+        var orderDay = datasheet[j].Date.split("/")[1];
 
+        if ((select === datasheet[j].Category) && (day === parseInt(orderDay)) && (month == parseInt(orderMonth)) && (year === parseInt(orderYear))){
+            return parseInt(datasheet[j].Quantity)
+        }
+    }
+}

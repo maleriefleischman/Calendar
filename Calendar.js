@@ -271,15 +271,3 @@ function match (day, month, year, select){
         }
     }
 }
-
-function orderNumber (day, month, year, select){
-    for (var j=0; j<datasheet.length; j++){
-        var orderMonth = datasheet[j].Date.split("/")[0];
-        var orderYear = datasheet[j].Date.split("/")[2];
-        var orderDay = datasheet[j].Date.split("/")[1];
-
-        if ((select === datasheet[j].Category) && (day === parseInt(orderDay)) && (month == parseInt(orderMonth)) && (year === parseInt(orderYear))){
-            return parseInt(datasheet[j].Quantity)
-        }
-    }
-}

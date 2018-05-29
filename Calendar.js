@@ -1,16 +1,17 @@
 /*
  * Calendar
- * @author Calendar template and overall functionality credited to https://code.tutsplus.com/tutorials/how-to-build-a-beautiful-calendar-widget--net-12538
- * @author(secondary) Modifications by Malerie Fleischman
- * @mentors - Jeremy C
+ * @author Calendar template credited to https://code.tutsplus.com/tutorials/how-to-build-a-beautiful-calendar-widget--net-12538
+ * @author(secondary) Modifications and datasheet related functionality by Malerie Fleischman
+ * @mentors - guidance, direction, and helpful tips by Jeremy C
  *
  * Calendar that visually represents if an item has been ordered on a specific day by highlighting green or red
  *
+ *
  */
 
-// Order information from provided csv data sheet
+// Order information from provided excel sheet
 var datasheet;
-//Category of interest to evaulate orders
+// Category of interest to evaluate orders, defaults to "Meat"
 var itemSelect = "Meat";
 // Current month being viewed
 var currMonth;
@@ -20,7 +21,7 @@ var currYear;
 var simpYear;
 // Call Calendar function
 var cal;
-// Holds value of original HTML text of td after hover event is called
+// If using .hover(). Holds value of date/order amount so that values can be switched back after hover event
 var swap;
 
 $(document).ready(function(){
@@ -37,8 +38,8 @@ $(document).ready(function(){
                 cal.init();
         }
     });
-    // drop down selects which item orders calendar will be visually presenting
-    $(".drop-down").on('change', function(){
+
+    $("#drop-down").on('change', function(){
         itemSelect = $(this).val();
         Papa.parse("./datasheet.csv", {
             download: true,
@@ -51,7 +52,7 @@ $(document).ready(function(){
             }
         })
     });
-    // refresh button pulls updated information from related csv
+
     $("#refresh").on("click",function(e){
         e.preventDefault();
         Papa.parse("./datasheet.csv", {
@@ -69,7 +70,7 @@ $(document).ready(function(){
 
 });
 
-// create calendar
+
 var CALENDAR = function () {
     var wrap, label,
         months = ["January", "February", "March", "April", "May", "June", "July","August", "September", "October", "November", "December"];
@@ -114,7 +115,7 @@ var CALENDAR = function () {
             }
         }
 
-        //global varials for use in match function
+        //global variables for use in match function
         currMonth = month+1;
         currYear = year;
         // datasheet entries only have last 2 digits for the year, so find last two digits of current year
@@ -122,6 +123,7 @@ var CALENDAR = function () {
 
         calendar = createCal(year, month);
 
+        // Removes all handlers attached to the elements so that handlers can be re-intiated when changing months
         $("td.day").off();
 
         $("#cal-frame", wrap)
@@ -133,8 +135,16 @@ var CALENDAR = function () {
             .find(".temp")
             .fadeOut("fast", function () { $(this).remove(); });
         label.text(calendar.label);
-// on hover, show number of orders created instead of date
-        $("td.day").hover(function (e) {
+
+    // tooltip on hover as requested
+
+      $("td.day").tooltip();
+
+
+
+        //(More stylish) hover innerHTML swap
+
+  /*      $("td.day").hover(function (e) {
             swap = e.currentTarget.innerHTML;
             e.currentTarget.innerHTML = e.currentTarget.getAttribute("data-amount");
         },function (e) {
@@ -143,6 +153,8 @@ var CALENDAR = function () {
             }
             swap = undefined;
         })
+*/
+
     }
 
 
@@ -177,7 +189,6 @@ var CALENDAR = function () {
         }
 
         /*
-         * My code:
          * Create html formatted days for the current month.
          * Run match function to determine class (true,false) of each day:
          * True = > 0 orders for selected item
@@ -199,15 +210,14 @@ var CALENDAR = function () {
                     //do the sht
                     var currDay = calendar[i][j];
                     var ordersMade = match(currDay, currMonth, simpYear, itemSelect);
-                    var colorClass = ordersMade ? "false" : "true";
 
 
                     if (ordersMade) {
-                        htmlCal += "<td class=\"day true\"" + " data-amount=  \"" + ordersMade + "\">" + calendar[i][j];
+                        htmlCal += "<td title = \"" + ordersMade + "\" class=\"day true \"" + " data-amount=  \"" + ordersMade + "\">" + calendar[i][j];
                     }
 
                     else{
-                        htmlCal += "<td class=\"day false\" data-amount=\"0\">" + calendar[i][j];
+                        htmlCal += "<td title = \"0\" class=\"day false \" data-amount=\"0\">" + calendar[i][j];
                     }
                 }
                 else{
@@ -247,7 +257,7 @@ var CALENDAR = function () {
 /* match function, compares each day with info in datasheet
  * @param (number) orderMonth - Month that an order was made
  * @param (number) orderYear - Year that an order was made
- * @paramf (number) orderDay - Day that an order was made
+ * @param (number) orderDay - Day that an order was made
  *
  * True = > 0 orders for selected item
  * False = No orders for selected item
